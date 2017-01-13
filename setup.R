@@ -1,5 +1,5 @@
 # init
-# libraries
+# packages
 library(tadaatoolbox)
 library(ggplot2)
 library(scales)
@@ -8,6 +8,9 @@ library(formattable)
 library(viridis)
 library(dplyr)
 library(tidyr)
+library(magrittr)
+library(broom)
+library(purrr)
 
 # get data
 cur_user <- as.list(Sys.info())$user

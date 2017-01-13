@@ -10,6 +10,8 @@ output:
 source("setup.R")
 ```
 
+Seit dem Wintersemester 15/16 führen wir TutorInnen ein Spreadsheet mit der Teilnehmerzahl pro Tutorium. Es werden keine individuellen Personen vermerkt — das wäre ja albern — wir führen lediglich Buch darüber, wie viele Leute an einem Termin aufgetaucht sind.  
+
 ## Raw data overview
 
 ```{r firstlook}
