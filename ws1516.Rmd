@@ -1,0 +1,11 @@
+---
+title: "WiSe 15/16"
+author: "Tobi & Lukas"
+date: "Rendered `r format(Sys.time(), '%F %H:%M')`"
+output:
+  html_document
+---
+
+```{r ws1516, include=FALSE}
+source("setup.R")
+```

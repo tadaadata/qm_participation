@@ -31,3 +31,12 @@ vignettes/*.pdf
 # Temporary files created by R markdown
 *.utf8.md
 *.knit.md
+.Rproj.user
+
+# Undesired output
+site_libs
+*png
+ws*.html
+ss*.html
+index.html
+README.html

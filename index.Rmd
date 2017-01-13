@@ -1,0 +1,42 @@
+---
+title: "Overview"
+author: "Tobi & Lukas"
+date: "Rendered `r format(Sys.time(), '%F %H:%M')`"
+output:
+  html_document
+---
+
+```{r overview, include=FALSE}
+source("setup.R")
+```
+
+## Raw data overview
+
+```{r firstlook}
+participation %>%
+  datatable(style = "bootstrap", rownames = F, 
+            fillContainer = T, 
+            height = 100,
+            options = list(
+              bInfo = F,
+              paging = F,
+              autoWidth = TRUE,
+              sDom  = '<"top">lrt<"bottom">ip'), 
+            caption = "QM Participation")
+```
+
+## Participation overview
+
+```{r firstlook_plot}
+participation %>%
+  group_by(SemesterID, Aufgabenblatt) %>%
+  summarize(Teilnehmerzahl = sum(Teilnehmerzahl)) %>%
+  ggplot(aes(x = Aufgabenblatt, y = Teilnehmerzahl)) +
+  geom_point(size = 2) +
+  facet_wrap(~SemesterID, ncol = 1) +
+  scale_x_continuous(breaks = seq(0, 100, 5), minor_breaks = seq(0, 100, 1)) +
+  labs(title = "QM Tutorienteilnehmerschaft",
+       subtitle = "Gesamtteilnahme pro Woche",
+       y = "Summe der Teilnehmerzahlen")
+```
+
