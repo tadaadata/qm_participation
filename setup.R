@@ -11,6 +11,7 @@ library(tidyr)
 library(magrittr)
 library(broom)
 library(purrr)
+library(methods)
 
 # get data
 cur_user <- as.list(Sys.info())$user
