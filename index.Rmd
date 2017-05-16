@@ -118,6 +118,7 @@ participation %>%
   scale_color_brewer(palette = "Set1", guide = F) +
   labs(title = "QM Tutorienteilnehmerschaft",
        subtitle = "Durchschnittliche Teilnahme pro Wochentag + 95% CI",
+       x = "Tag",
        y = "Mittlere Teilnehmerzahl + 95% CI")
 
 participation %>%
@@ -131,6 +132,7 @@ participation %>%
   scale_color_brewer(palette = "Set1", guide = F) +
   labs(title = "QM Tutorienteilnehmerschaft",
        subtitle = "Durchschnittliche Teilnahme pro Wochentag + 95% CI",
+       x = "Tag",
        y = "Mittlere Teilnehmerzahl + 95% CI")
 ```
 
