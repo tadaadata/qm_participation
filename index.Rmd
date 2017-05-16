@@ -29,6 +29,18 @@ participation %>%
             caption = "QM Participation")
 ```
 
+```{r all_semesters_raw_perdate}
+ggplot(data = participation, aes(x = Datum, y = Teilnehmerzahl)) +
+  geom_col(position = "dodge") +
+  facet_wrap(~Studienjahr, ncol = 1, scales = "free_x", labeller = label_both) +
+  scale_x_date(date_breaks = "1 month",
+               date_labels = "%b %y") +
+  labs(title = "Tutorienteilnehmerschaft",
+       subtitle = "Insgesamt",
+       x = "", y = "Teilnehmerzahl")
+```
+
+
 ## TutorInnen
 
 ```{r all_semesters_per_tutorIn}
