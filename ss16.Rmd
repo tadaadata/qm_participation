@@ -8,4 +8,6 @@ output:
 
 ```{r ss16, include=FALSE}
 source("setup.R")
+knitr::opts_chunk$set(fig.path = "assets/plots/SoSe16/")
+participation %<>% filter(SemesterID == "SoSe 16")
 ```
