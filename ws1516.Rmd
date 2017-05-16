@@ -9,7 +9,6 @@ output:
 ```{r ws1516, include=FALSE}
 source("setup.R")
 knitr::opts_chunk$set(fig.path = "assets/plots/WiSe1516/")
-
 participation %<>% filter(SemesterID == "WiSe 15/16")
 ```
 
@@ -110,9 +109,9 @@ Das Tutorium mit der geringsten durchschnittlichen Teilnehmerzahl war das von **
 ```{r tutid_aov, include=F}
 # Eine naive ANOVA der Teilnehmerzahl auf die einzelnen Tutoriumstermine ergab folgendes Ergebnis:
 
-tadaa_aov(Teilnehmerzahl ~ TutID, data = participation, print = "markdown")
-
-model_tutid <- aov(Teilnehmerzahl ~ TutID, data = participation)
+# tadaa_aov(Teilnehmerzahl ~ TutID, data = participation, print = "markdown")
+# 
+# model_tutid <- aov(Teilnehmerzahl ~ TutID, data = participation)
 
 # model_tutid %>% TukeyHSD() %>%
 #   tidy %>%
