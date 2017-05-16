@@ -11,3 +11,378 @@ source("setup.R")
 knitr::opts_chunk$set(fig.path = "assets/plots/SoSe16/")
 participation %<>% filter(SemesterID == "SoSe 16")
 ```
+
+```{r basics}
+totals <- participation %>% 
+            summarize(mean   = round(mean(Teilnehmerzahl, na.rm = TRUE), 2),
+                      median = median(Teilnehmerzahl, na.rm = TRUE),
+                      sd     = round(sd(Teilnehmerzahl, na.rm = TRUE), 2),
+                      min    = min(Teilnehmerzahl, na.rm = TRUE),
+                      max    = max(Teilnehmerzahl, na.rm = TRUE),
+                      total  = sum(Teilnehmerzahl, na.rm = TRUE),
+                      n      = n())
+```
+
+Wir haben dieses Semester **`r totals$n`** Tutorien gehalten, mit insgesamt **`r totals$total`** Teilnahmen. Ein durchschnittliches Tutorium hatte **`r totals$mean`** Teilnehmende (Median = **`r totals$median`**,  SD = **`r totals$sd`**), mit mindestens **`r totals$min`** und höchstens **`r totals$max`** Personen pro Tutorium.  
+Die Häufigkeitsverteilung der Teilnahme sieht wie folgt aus:
+
+```{r hist}
+ggplot(data = participation, aes(x = Teilnehmerzahl)) +
+  geom_histogram(aes(fill = ..count..), binwidth = 1, color = "black") +
+  geom_density(aes(y = ..count..), fill = "black", alpha = .1) +
+  geom_vline(xintercept = mean(participation$Teilnehmerzahl, na.rm = T), 
+             linetype = "dotted", size = .7) +
+  scale_x_continuous(breaks = seq(0, 100, 5),
+                     minor_breaks = seq(0, 100, 1)) +
+  scale_y_continuous(breaks = seq(0, 100, 5),
+                     minor_breaks = seq(0, 100, 1)) +
+  scale_fill_viridis(option = "plasma") +
+  labs(title = "Tutoriumsteilnehmerzahl", x = "Teilnehmende", 
+       y = "Häufigkeit", fill = "Häufigkeit") +
+  theme_readthedown(axis_emph = "y") +
+  theme(legend.position = c(0.93, 0.5))
+
+shap_p <- broom::tidy(shapiro.test(participation$Teilnehmerzahl))$p.value
+```
+
+Wir erhalten eine **`r ifelse(totals$median < totals$mean, "linkssteile", "rechtssteile")`** Verteilung. Der Shapiro-Wilk-Test auf Normalverteilung ergab ein **`r ifelse(shap_p < .10, "signifikantes", "nicht signifikantes")`** Ergebnis `r ifelse(shap_p < .10, paste0("**(p ", pval_string(shap_p), ")**"), NULL)` (was allein aufgrund von N = **`r totals$n`** nicht überraschend ist).
+
+Hier eine Übersicht der einzelnen Tutorien:
+
+```{r table_tutids}
+participation %>% 
+  group_by(TutID, TutorIn) %>% 
+  summarize(mean   = round(mean(Teilnehmerzahl, na.rm = TRUE), 2),
+            median = median(Teilnehmerzahl, na.rm = TRUE),
+            sd     = round(sd(Teilnehmerzahl, na.rm = TRUE), 2),
+            min    = min(Teilnehmerzahl, na.rm = TRUE),
+            max    = max(Teilnehmerzahl, na.rm = TRUE),
+            total  = sum(Teilnehmerzahl, na.rm = TRUE),
+            n      = n()) %>%
+  set_colnames(c("Tutorium", "TutorIn", "Mittelwert", "Median", "SD", 
+                 "Min", "Max", "Gesamt", "N")) %>%
+  format_table(list(
+    Mittelwert = color_bar("lightblue"),
+    SD         = color_bar("pink"),
+    Gesamt     = color_bar("lightgreen"),
+    N          = color_tile("lightyellow", "orange")
+  ),
+  align = "l", format = "pandoc")
+```
+
+# Tutorien
+
+Die einzelnen Veranstaltungen hatten die folgenden Teilnehmerzahlen (Mittelwerte und 95% CI):
+
+```{r plot_by_tutid}
+mean_by_tutid <- participation %>% group_by(TutorIn, TutID) %>%
+                    summarize(mean = round(mean(Teilnehmerzahl), 2),
+                              upper = mean + confint_t(Teilnehmerzahl),
+                              lower = mean - confint_t(Teilnehmerzahl)) %>%
+                    ungroup %>%
+                    mutate(TutID = factor(TutID, levels = rev(levels(TutID))))
+
+mean_by_tutid %>% 
+  ggplot(aes(x = TutID, color = TutorIn)) +
+  geom_errorbar(aes(y = mean, ymin = lower, ymax = upper), 
+                size = 3, width = .7, color = "black") +
+  geom_errorbar(aes(y = mean, ymin = lower, ymax = upper), 
+                size = 2, width = .6) +
+  geom_point(aes(y = mean), color = "black", size = 3) +
+  geom_hline(aes(yintercept = mean(mean)), linetype = "dotted") +
+  scale_y_continuous(breaks = seq(0, 100, 5),
+                     minor_breaks = seq(0, 100, 1)) +
+  scale_color_brewer(palette = "Set1") +
+  coord_flip() +
+  expand_limits(y = 0) +
+  labs(title = "Mittlere Teilnahme pro TutorIn",
+       x = "", y = "Mittelwert & CI (95%)") +
+  theme_readthedown(axis_emph = "x") +
+  theme(axis.text.y = element_text(size = rel(1), hjust = 0))
+
+model_tutid <- aov(Teilnehmerzahl ~ TutID, data = participation)
+```
+
+Das Tutorium mit der geringsten durchschnittlichen Teilnehmerzahl war das von **`r mean_by_tutid$TutorIn[mean_by_tutid$mean == min(mean_by_tutid$mean)]`** am **`r mean_by_tutid$TutID[mean_by_tutid$mean == min(mean_by_tutid$mean)]`**, mit einem Mittelwert von **`r mean_by_tutid$mean[mean_by_tutid$mean == min(mean_by_tutid$mean)]`**. Das am besten besuchte Tutorium war das von **`r mean_by_tutid$TutorIn[mean_by_tutid$mean == max(mean_by_tutid$mean)]`**, mit durchschnittlich **`r mean_by_tutid$mean[mean_by_tutid$mean == max(mean_by_tutid$mean)]`** Teilnehmenden am **`r mean_by_tutid$TutID[mean_by_tutid$mean == max(mean_by_tutid$mean)]`**.
+
+```{r tutid_aov, include=F}
+# Eine naive ANOVA der Teilnehmerzahl auf die einzelnen Tutoriumstermine ergab folgendes Ergebnis:
+
+# tadaa_aov(Teilnehmerzahl ~ TutID, data = participation, print = "markdown")
+# 
+# model_tutid <- aov(Teilnehmerzahl ~ TutID, data = participation)
+
+# model_tutid %>% TukeyHSD() %>%
+#   tidy %>%
+#   filter(adj.p.value < 0.05) %>%
+#   dust() %>%
+#   sprinkle_colnames(estimate = "t",
+#                     adj.p.value = "p") %>%
+#   sprinkle(col = 5, fn = quote(pixiedust::pvalString(value))) %>%
+#   sprinkle(col = 2:4, round = 2) %>%
+#   sprinkle_print_method("console") %>%
+#   as.data.frame() %>%
+#   datatable()
+```
+
+
+# Veranstaltungstage
+
+```{r plot_by_day}
+participation %>% 
+  group_by(Tag) %>% 
+  summarize(mean   = round(mean(Teilnehmerzahl, na.rm = TRUE), 2),
+            median = median(Teilnehmerzahl, na.rm = TRUE),
+            sd     = round(sd(Teilnehmerzahl, na.rm = TRUE), 2),
+            min    = min(Teilnehmerzahl, na.rm = TRUE),
+            max    = max(Teilnehmerzahl, na.rm = TRUE),
+            total  = sum(Teilnehmerzahl, na.rm = TRUE),
+            n      = n()) %>%
+  set_colnames(c("Aufgabenblatt", "Mittelwert", "Median", "SD", "Min", "Max", "Gesamt", "N")) %>%
+  format_table(list(
+    Mittelwert = color_bar("lightblue"),
+    SD         = color_bar("pink"),
+    Gesamt     = color_bar("lightgreen"),
+    N          = color_tile("lightyellow", "orange")
+  ),
+  align = "l", format = "pandoc")
+
+
+mean_by_day <- participation %>% group_by(Tag) %>%
+  summarize(mean = round(mean(Teilnehmerzahl), 2),
+            upper = mean + confint_t(Teilnehmerzahl),
+            lower = mean - confint_t(Teilnehmerzahl)) %>%
+  ungroup 
+
+mean_by_day %>%
+  ggplot(aes(x = Tag)) +
+  geom_errorbar(aes(y = mean, ymin = lower, ymax = upper), size = 2, width = .5) +
+  geom_point(aes(y = mean), color = "red", size = 3) +
+  geom_hline(aes(yintercept = mean(mean)), linetype = "dotted") +
+  scale_y_continuous(breaks = seq(0, 100, 5),
+                     minor_breaks = seq(0, 100, 1)) +
+  expand_limits(y = 0) +
+  facet_grid(.~Tag, scales = "free_x") +
+  labs(title = "Mittlere Teilnahme pro Wochentag", y = "Mittelwert & CI (95%)", x = "") +
+  theme_readthedown(axis_emph = "y") +
+  theme(axis.text.x  = element_blank(),
+        axis.ticks.x = element_blank(),
+        strip.text   = element_text(size = rel(1)))
+
+model <- aov(data = participation, Teilnehmerzahl ~ Tag) %>% tidy
+mean_by_day_signif <- ifelse(model$p.value[1] < .05, "signifikante", "keine signifikanten")
+```
+
+Was die Verteilung der Tutorien auf die Wochentag angeht, ergab sich für **`r mean_by_day$Tag[mean_by_day$mean == max(mean_by_day$mean)]`** die größte durchschnittliche Teilnehmerzahl mit **`r mean_by_day$mean[mean_by_day$mean == max(mean_by_day$mean)]`** Teilnehmenden. Der am schwächsten besuchte Tutoriumstag war **`r arrange(mean_by_day, mean)$Tag[1]`** mit einem Durchschnittswert von **`r arrange(mean_by_day, mean)$mean[1]`** Teilnehmenden.  
+Eine ANOVA der Teilnehmerzahlen auf die Wochentage ergab **`r mean_by_day_signif`** tagesbedingte Unterschiede `r if (mean_by_day_signif == "signifikante") paste0('(**p ', tadaatoolbox::pval_string(model$p.value[1]), '**)')`.
+
+# TutorInnen
+
+Als Nächstes betrachten wir die Teilnahme pro TutorIn.
+
+```{r table_by_tutorin}
+participation %>% 
+  group_by(TutorIn) %>% 
+  summarize(mean   = round(mean(Teilnehmerzahl, na.rm = TRUE), 2),
+            median = median(Teilnehmerzahl, na.rm = TRUE),
+            sd     = round(sd(Teilnehmerzahl, na.rm = TRUE), 2),
+            min    = min(Teilnehmerzahl, na.rm = TRUE),
+            max    = max(Teilnehmerzahl, na.rm = TRUE),
+            total  = sum(Teilnehmerzahl, na.rm = TRUE),
+            n      = n()) %>%
+  set_colnames(c("TutorIn", "Mittelwert", "Median", "SD", "Min", "Max", "Gesamt", "N")) %>%
+  format_table(list(
+    Mittelwert = color_bar("lightblue"),
+    SD         = color_bar("pink"),
+    Gesamt     = color_bar("lightgreen"),
+    N          = color_tile("lightyellow", "orange")
+  ),
+  align = "l", format = "pandoc")
+```
+
+Zur genaueren Betrachtung dienen auch hier wieder Mittelwerte und Konfidenzintervalle:
+
+```{r plot_by_tutorin}
+mean_by_tutorin <- participation %>% group_by(TutorIn) %>%
+                      summarize(mean = mean(Teilnehmerzahl),
+                                upper = mean + confint_t(Teilnehmerzahl),
+                                lower = mean - confint_t(Teilnehmerzahl)) %>%
+                      ungroup %>%
+                      arrange(desc(mean))
+
+mean_by_tutorin %>%
+  ggplot(aes(x = reorder(TutorIn, mean), color = TutorIn)) +
+  geom_errorbar(aes(y = mean, ymin = lower, ymax = upper), 
+                size = 3, width = .7, color = "black") +
+  geom_errorbar(aes(y = mean, ymin = lower, ymax = upper), 
+                size = 2, width = .6) +
+  geom_point(aes(y = mean), color = "black", size = 3) +
+  geom_hline(aes(yintercept = mean(mean)), linetype = "dotted") +
+  scale_y_continuous(breaks = pretty_breaks(),
+                     minor_breaks = seq(0, 50, 1)) +
+  scale_color_brewer(palette = "Set1", guide = F) +
+  expand_limits(y = 0) +
+  coord_flip() +
+  labs(title = "Mittlere Teilnahme pro TutorIn",
+       y = "Mittlere Teilnahme & CI (95%)", x = "") +
+  theme_readthedown(axis_emph = "x") +
+  theme(axis.text.y = element_text(size = rel(1.2), hjust = 1),
+        axis.ticks.y = element_blank())
+```
+
+# Semesterverlauf
+
+```{r plot_by_week}
+participation %>% 
+  group_by(Aufgabenblatt) %>% 
+  summarize(mean   = round(mean(Teilnehmerzahl, na.rm = TRUE), 2),
+            median = median(Teilnehmerzahl, na.rm = TRUE),
+            sd     = round(sd(Teilnehmerzahl, na.rm = TRUE), 2),
+            min    = min(Teilnehmerzahl, na.rm = TRUE),
+            max    = max(Teilnehmerzahl, na.rm = TRUE),
+            total  = sum(Teilnehmerzahl, na.rm = TRUE),
+            n      = n()) %>%
+  set_colnames(c("Aufgabenblatt", "Mittelwert", "Median", "SD", "Min", "Max", "Gesamt", "N")) %>%
+  format_table(list(
+    Mittelwert = color_bar("lightblue"),
+    SD         = color_bar("pink"),
+    Gesamt     = color_bar("lightgreen"),
+    N          = color_tile("lightyellow", "orange")
+  ),
+  align = "l", format = "pandoc")
+
+
+mean_by_week <- participation %>% 
+  group_by(Aufgabenblatt) %>% 
+  summarize(mean   = round(mean(Teilnehmerzahl, na.rm = TRUE), 2),
+            median = median(Teilnehmerzahl, na.rm = TRUE),
+            sd     = round(sd(Teilnehmerzahl, na.rm = TRUE), 2),
+            min    = min(Teilnehmerzahl, na.rm = TRUE),
+            max    = max(Teilnehmerzahl, na.rm = TRUE),
+            total  = sum(Teilnehmerzahl, na.rm = TRUE),
+            n      = n()) %>%
+  ungroup
+
+participation %>% group_by(Aufgabenblatt) %>%
+  summarize(mean = mean(Teilnehmerzahl),
+            upper = mean + confint_t(Teilnehmerzahl),
+            lower = mean - confint_t(Teilnehmerzahl)) %>%
+  mutate(Aufgabenblatt = factor(Aufgabenblatt)) %>%
+  ungroup %>%
+  ggplot(aes(x = Aufgabenblatt)) +
+  geom_errorbar(aes(y = mean, ymin = lower, ymax = upper), size = 1) +
+  geom_point(aes(y = mean), color = "red", size = 3) +
+  geom_hline(aes(yintercept = mean(mean)), linetype = "dotted") +
+  scale_y_continuous(breaks = seq(0, 100, 5),
+                     minor_breaks = seq(0, 100, 1)) +
+  expand_limits(y = 0) +
+  labs(title = "Mittlere Teilnahme pro Woche", 
+       y = "Mittelwert + CI (95%)") +
+  theme_readthedown(axis_emph = "y")
+```
+
+Die höchste Teilnehmerzahl wurde in der Woche des **`r mean_by_week$Aufgabenblatt[mean_by_week$total == max(mean_by_week$total)]`**. Aufgabenblatts erreicht, mit durchschnittlich **`r mean_by_week$mean[mean_by_week$total == max(mean_by_week$total)]`** Teilnehmenden und **`r mean_by_week$total[mean_by_week$total == max(mean_by_week$total)]`**
+insgesamt. Die geringste Teilnehmerzahl hatte die Woche des **`r paste(mean_by_week$Aufgabenblatt[mean_by_week$total == min(mean_by_week$total)], collapse = " und ")`**. Aufgabenblatts, mit **`r mean_by_week$total[mean_by_week$total == min(mean_by_week$total)][1]`** Teilnehmenden ingesamt und einem Mittelwert von **`r mean_by_week$mean[mean_by_week$total == min(mean_by_week$total)][1]`** Teilnehmenden pro Tutorium.
+
+## Regressionsmodelle
+
+```{r plot_by_week_total_reg}
+tmp <- participation %>% 
+         group_by(Aufgabenblatt) %>% 
+         summarize(Teilnehmer = sum(Teilnehmerzahl))
+
+rsq     <- round(cor(tmp$Aufgabenblatt, tmp$Teilnehmer)^2, 2)
+model   <- lm(Teilnehmer ~ Aufgabenblatt, data = tmp) %>% tidy
+model2  <- lm(Teilnehmer ~ poly(Aufgabenblatt, 2), data = tmp)
+model2t <- tidy(model2)
+model2g <- glance(model2)
+
+lab_lin  <- paste0("Linear: R²", " ≈ ", rsq, "; b ≈ ", round(model$estimate[2], 2))
+#lab_lin  <- as.expression(bquote(~"Linear:" ~R^2 %~~% .(rsq) ~"b" %~~% .(round(model$estimate[2], 2))))
+lab_quad <- paste0("Quadratisch: R²", " ≈ ", round(model2g$r.squared, 2))
+#lab_quad <- as.expression(bquote(~"Quadratisch:" ~R^2 %~~% .(round(model2g$r.squared, 2))))
+  
+ggplot(data = tmp, aes(x = Aufgabenblatt, y = Teilnehmer)) +
+  geom_point(size = 3) +
+  geom_smooth(aes(color = "Lin"), method = lm, se = F) +
+  geom_smooth(aes(color = "Quad"), method = lm, se = F, formula = y ~ poly(x, 2)) +
+  geom_hline(yintercept = mean(tmp$Teilnehmer), linetype = "dotted") +
+  scale_x_continuous(breaks = seq(0, 13, 1)) +
+  scale_y_continuous(breaks = seq(0, 200, 20),
+                     minor_breaks = seq(0, 200, 5)) +
+  scale_color_brewer(palette = "Set1", 
+                    labels = c(lab_lin, lab_quad)) +
+  expand_limits(y = 0) +
+  labs(y = "Teilnehmende", x = "Aufgabenblatt (≈ Semesterwoche)", 
+       color = "", title = "Teilnehmende pro Woche (Gesamt)") + 
+  theme_readthedown(axis_emph = "y") +
+  theme(legend.position = c(0.25, 0.2),
+        legend.text = element_text(size = rel(1), hjust = 0))
+
+```
+
+```{r plot_by_week_mean_reg}
+tmp2 <- participation %>% 
+         group_by(Aufgabenblatt) %>% 
+         summarize(Teilnehmer = mean(Teilnehmerzahl))
+
+rsq     <- round(cor(tmp2$Aufgabenblatt, tmp2$Teilnehmer)^2, 2)
+model   <- lm(Teilnehmer ~ Aufgabenblatt, data = tmp2) %>% tidy
+model2  <- lm(Teilnehmer ~ poly(Aufgabenblatt, 2), data = tmp2)
+model2t <- tidy(model2)
+model2g <- glance(model2)
+
+lab_lin  <- paste0("Linear: R² ≈ ", rsq, "; b ≈ ", round(model$estimate[2], 2))
+lab_quad <- paste0("Quadratisch: R² ≈ ", round(model2g$r.squared, 2))
+
+ggplot(data = tmp2, aes(x = Aufgabenblatt, y = Teilnehmer)) +
+  geom_point(size = 3) +
+  geom_smooth(aes(color = lab_lin), method = lm, se = F) +
+  geom_smooth(aes(color = lab_quad), method = lm, se = F, formula = y ~ poly(x, 2)) +
+  geom_hline(yintercept = mean(tmp2$Teilnehmer), linetype = "dotted") +
+  scale_x_continuous(breaks = pretty_breaks(10)) +
+  scale_y_continuous(breaks = seq(0, 200, 5),
+                     minor_breaks = seq(0, 200, 1)) +
+  scale_color_brewer(palette = "Set1") +
+  expand_limits(y = 0) +
+  labs(y = "Teilnehmende", x = "Aufgabenblatt (≈ Semesterwoche)", 
+       color = "", title = expression(paste("Teilnehmende pro Woche (", bar(x), ")"))) +
+  theme_readthedown(axis_emph = "y") +
+  theme(legend.position = c(0.25, 0.2),
+        legend.text = element_text(size = rel(1)))
+```
+
+
+## Verlauf per Tutorium
+
+```{r verlauf_pertut}
+participation %>% 
+  mutate(Uhrzeit = factor(Uhrzeit, levels = rev(levels(Uhrzeit)), ordered = TRUE)) %>%
+  ggplot(aes(x = Aufgabenblatt, y = Teilnehmerzahl, fill = TutorIn)) +
+  geom_bar(stat = "identity", color = "black") +
+  scale_fill_brewer(palette = "Set1") +
+  facet_grid(Uhrzeit ~ Tag, switch = "y") +
+  labs(title = "Teilnehmende pro Woche pro Tutorium", 
+       x = "Aufgabenblatt", fill = "", y = "") +
+  theme_readthedown(axis_emph = "y") +
+  theme(strip.text = element_text(size = rel(1)),
+        strip.text.y = element_text(angle = 180))
+```
+
+## Verlauf per TutorIn
+
+```{r verlauf_tutorin}
+participation %>% group_by(Aufgabenblatt, TutorIn) %>%
+  summarize(Teilnehmerzahl = sum(Teilnehmerzahl)) %>%
+  ggplot(aes(x = Aufgabenblatt, weight = Teilnehmerzahl, fill = TutorIn)) +
+  geom_bar(color = "black") +
+  scale_y_continuous(breaks = seq(0, 100, 5),
+                     minor_breaks = seq(0, 100, 1)) +
+  scale_fill_brewer(palette = "Set1", guide = F) +
+  facet_grid(. ~ TutorIn) +
+  labs(title = "Teilnehmende pro TutorIn pro Woche", 
+       x = "Aufgabenblatt (≈ Semesterwoche)", y = "Teilnehmende") +
+  theme_readthedown(axis_emph = "y") +
+  theme(strip.text = element_text(size = rel(1)))
+
+```
