@@ -1,0 +1,13 @@
+---
+title: "SoSe 17"
+author: "Tobi & Lukas"
+date: "Rendered `r format(Sys.time(), '%F %H:%M')`"
+output:
+  html_document
+---
+
+```{r ss17, include=FALSE}
+source("setup.R")
+knitr::opts_chunk$set(fig.path = "assets/plots/SoSe17/")
+participation %<>% filter(SemesterID == "SoSe 17")
+```

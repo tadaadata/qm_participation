@@ -15,6 +15,8 @@ navbar:
           href: ss16.html
         - text: "WiSe 16/17"
           href: ws1617.html
+        - text: "SoSe 117"
+          href: ss17.html
   right:
     - text: "Tadaa, Data!"
       icon: fa-star
