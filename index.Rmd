@@ -76,20 +76,6 @@ participation %>%
 
 ```{r all_semesters_mean}
 participation %>%
-  group_by(Semester, Studienjahr, Aufgabenblatt) %>%
-  summarize(Teilnehmerzahl = mean(Teilnehmerzahl)) %>%
-  ungroup() %>%
-  ggplot(aes(x = Aufgabenblatt, y = Teilnehmerzahl,
-             color = Studienjahr)) +
-  geom_point(size = 4) +
-  facet_grid(Studienjahr ~ Semester, labeller = label_both) +
-  scale_x_continuous(breaks = seq(0, 100, 3), minor_breaks = seq(0, 100, 1)) +
-  scale_color_brewer(palette = "Set1", guide = F) +
-  labs(title = "QM Tutorienteilnehmerschaft",
-       subtitle = "Durchschnittliche Teilnahme pro Woche",
-       y = "Mittlere Teilnehmerzahl")
-
-participation %>%
   ggplot(aes(x = Aufgabenblatt, y = Teilnehmerzahl,
              color = Studienjahr)) +
   stat_summary(fun.data = mean_cl_normal, geom = "errorbar", size = 1.5) +
@@ -117,3 +103,58 @@ participation %>%
        subtitle = "Durchschnittliche Teilnahme pro Woche + 95% CI",
        y = "Mittlere Teilnehmerzahl + 95% CI")
 ```
+
+## Weekdays
+
+```{r all_semester_weekdays}
+participation %>%
+  ggplot(aes(x = forcats::fct_rev(Tag), y = Teilnehmerzahl)) +
+  stat_summary(fun.data = mean_cl_normal, geom = "errorbar", size = 1.5) +
+  stat_summary(fun.y = mean, geom = "point", size = 2.5, color = "black") +
+  stat_summary(fun.y = mean, geom = "point", size = 1.5) +
+  geom_hline(yintercept = mean(participation$Teilnehmerzahl, na.rm = T),
+             linetype = "dashed") +
+  coord_flip() +
+  scale_color_brewer(palette = "Set1", guide = F) +
+  labs(title = "QM Tutorienteilnehmerschaft",
+       subtitle = "Durchschnittliche Teilnahme pro Wochentag + 95% CI",
+       y = "Mittlere Teilnehmerzahl + 95% CI")
+
+participation %>%
+  ggplot(aes(x = forcats::fct_rev(Tag), y = Teilnehmerzahl,
+             color = Studienjahr)) +
+  stat_summary(fun.data = mean_cl_normal, geom = "errorbar", size = 1.5) +
+  stat_summary(fun.y = mean, geom = "point", size = 2.5, color = "black") +
+  stat_summary(fun.y = mean, geom = "point", size = 1.5) +
+  coord_flip() +
+  facet_grid(Studienjahr ~ Semester, labeller = label_both) +
+  scale_color_brewer(palette = "Set1", guide = F) +
+  labs(title = "QM Tutorienteilnehmerschaft",
+       subtitle = "Durchschnittliche Teilnahme pro Wochentag + 95% CI",
+       y = "Mittlere Teilnehmerzahl + 95% CI")
+```
+
+### ANOVA
+
+```{r all_semesters_weekday_anova}
+model <- aov(Teilnehmerzahl ~ Tag, data = participation)
+
+tadaa_aov(Teilnehmerzahl ~ Tag, data = participation, print = "markdown")
+
+TukeyHSD(model) %>%
+  broom::tidy() %>%
+  mutate(signif = if_else(adj.p.value < 0.05, "Signifikant", "Nicht Signifikant")) %>%
+  ggplot(data = ., aes(x = reorder(comparison, estimate), 
+                       y = estimate, 
+                       ymin = conf.low, ymax = conf.high,
+                       color = signif)) +
+  geom_errorbar(width = .5, size = 1.5) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "black") +
+  coord_flip() +
+  scale_color_brewer(palette = "Set1", direction = -1) +
+  labs(title = "Tukey HSD Post Hoc Test",
+       subtitle = "Estimates mit 95% CI",
+       x = "Vergleich", y = "Estimate + 95% CI", color = "") +
+  theme(legend.position = "top")
+```
+
