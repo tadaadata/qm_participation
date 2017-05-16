@@ -20,4 +20,3 @@ if (!file.exists(out_dir)) {
 # Move to out_dir
 sapply(out_docs,   file.copy, to = out_dir, overwrite = T, recursive = F)
 sapply(out_assets, file.copy, to = out_dir, overwrite = T, recursive = T)
-

@@ -8,6 +8,8 @@ output:
 
 ```{r overview, include=FALSE}
 source("setup.R")
+
+theme_set(theme_readthedown(base_size = 14))
 ```
 
 Seit dem Wintersemester 15/16 führen wir TutorInnen ein Spreadsheet mit der Teilnehmerzahl pro Tutorium. Es werden keine individuellen Personen vermerkt — das wäre ja albern — wir führen lediglich Buch darüber, wie viele Leute an einem Termin aufgetaucht sind.  
@@ -27,6 +29,29 @@ participation %>%
             caption = "QM Participation")
 ```
 
+## TutorInnen
+
+```{r all_semesters_per_tutorIn}
+ggplot(data = participation, 
+       aes(x = forcats::fct_reorder(TutorIn, Teilnehmerzahl, fun = mean), 
+           y = Teilnehmerzahl,
+           color = TutorIn)) +
+  stat_summary(fun.data = mean_cl_normal, geom = "errorbar", size = 2) +
+  stat_summary(fun.y = mean, geom = "point", size = 2.5, color = "black") +
+  stat_summary(fun.y = mean, geom = "point", size = 1.5) +
+  geom_hline(yintercept = mean(participation$Teilnehmerzahl, na.rm = T),
+             linetype = "dashed") +
+  scale_color_brewer(palette = "Paired", guide = F) +
+  coord_flip() +
+  labs(title = "Durchnittliche Teilnehmerzahl pro TutorIn",
+       subtitle = "Mittelwert + 95% CI",
+       x = "TutorIn", y = "Teilnehmerzahl",
+       caption = "Daten aus allen Semestern")
+```
+
+
+
+
 ## Participation overview
 
 ### Sums
@@ -36,7 +61,6 @@ participation %>%
   group_by(Semester, Studienjahr, Aufgabenblatt) %>%
   summarize(Teilnehmerzahl = sum(Teilnehmerzahl)) %>%
   ungroup() %>%
-  mutate(Semester = factor(Semester, levels = c("WiSe", "SoSe"), ordered = T)) %>%
   ggplot(aes(x = Aufgabenblatt, y = Teilnehmerzahl,
              color = Studienjahr)) +
   geom_point(size = 4) +
@@ -50,12 +74,11 @@ participation %>%
 
 ### Means
 
-```{r all_semesters_mean, fig.height=8}
+```{r all_semesters_mean}
 participation %>%
   group_by(Semester, Studienjahr, Aufgabenblatt) %>%
   summarize(Teilnehmerzahl = mean(Teilnehmerzahl)) %>%
   ungroup() %>%
-  mutate(Semester = factor(Semester, levels = c("WiSe", "SoSe"), ordered = T)) %>%
   ggplot(aes(x = Aufgabenblatt, y = Teilnehmerzahl,
              color = Studienjahr)) +
   geom_point(size = 4) +
@@ -67,7 +90,6 @@ participation %>%
        y = "Mittlere Teilnehmerzahl")
 
 participation %>%
-  mutate(Semester = factor(Semester, levels = c("WiSe", "SoSe"), ordered = T)) %>%
   ggplot(aes(x = Aufgabenblatt, y = Teilnehmerzahl,
              color = Studienjahr)) +
   stat_summary(fun.data = mean_cl_normal, geom = "errorbar", size = 1.5) +
@@ -76,6 +98,21 @@ participation %>%
   facet_grid(Studienjahr ~ Semester, labeller = label_both) +
   scale_x_continuous(breaks = seq(0, 100, 3), minor_breaks = seq(0, 100, 1)) +
   scale_color_brewer(palette = "Set1", guide = F) +
+  labs(title = "QM Tutorienteilnehmerschaft",
+       subtitle = "Durchschnittliche Teilnahme pro Woche + 95% CI",
+       y = "Mittlere Teilnehmerzahl + 95% CI")
+
+participation %>%
+  ggplot(aes(x = Aufgabenblatt, y = Teilnehmerzahl,
+             color = Studienjahr, fill = Studienjahr)) +
+  stat_summary(fun.data = mean_cl_normal, geom = "ribbon", 
+               size = 1.5, alpha = .6) +
+  stat_summary(fun.y = mean, geom = "path", size = 2.5, color = "black") +
+  stat_summary(fun.y = mean, geom = "path", size = 1.5) +
+  facet_grid(Studienjahr ~ Semester, labeller = label_both) +
+  scale_x_continuous(breaks = seq(0, 100, 3), minor_breaks = seq(0, 100, 1)) +
+  scale_color_brewer(palette = "Set1", guide = F) +
+  scale_fill_brewer(palette = "Set1", guide = F) +
   labs(title = "QM Tutorienteilnehmerschaft",
        subtitle = "Durchschnittliche Teilnahme pro Woche + 95% CI",
        y = "Mittlere Teilnehmerzahl + 95% CI")
