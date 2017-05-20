@@ -15,7 +15,7 @@ navbar:
           href: ss16.html
         - text: "WiSe 16/17"
           href: ws1617.html
-        - text: "SoSe 117"
+        - text: "SoSe 17"
           href: ss17.html
   right:
     - text: "Tadaa, Data!"
