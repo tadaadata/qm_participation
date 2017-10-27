@@ -12,6 +12,7 @@ library(magrittr)
 library(broom)
 library(purrr)
 library(methods)
+library(hrbrthemes)
 
 # get data
 cur_user <- as.list(Sys.info())$user

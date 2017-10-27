@@ -9,7 +9,7 @@ output:
 ```{r overview, include=FALSE}
 source("setup.R")
 
-theme_set(theme_readthedown(base_size = 14))
+theme_set(theme_ipsum(base_size = 14))
 ```
 
 Seit dem Wintersemester 15/16 führen wir TutorInnen ein Spreadsheet mit der Teilnehmerzahl pro Tutorium. Es werden keine individuellen Personen vermerkt — das wäre ja albern — wir führen lediglich Buch darüber, wie viele Leute an einem Termin aufgetaucht sind.  
@@ -40,7 +40,6 @@ ggplot(data = participation, aes(x = Datum, y = Teilnehmerzahl)) +
        x = "", y = "Teilnehmerzahl")
 ```
 
-
 ## TutorInnen
 
 ```{r all_semesters_per_tutorIn}
@@ -62,9 +61,25 @@ ggplot(data = participation,
 ```
 
 
-
-
 ## Participation overview
+
+### Distributions
+
+```{r all_semesters_freq}
+ggplot(data = participation, aes(x = Teilnehmerzahl)) +
+  geom_histogram(binwidth = 1, alpha = .75) +
+  labs(title = "Teilnahmen pro Tutorium",
+       subtitle = "Alle Semester",
+       x = "TeilnehmerInnen", y = "Häufigkeit")
+
+
+ggplot(data = participation, aes(x = Teilnehmerzahl)) +
+  geom_histogram(binwidth = 1, alpha = .75) +
+  facet_grid(Studienjahr ~ Semester) +
+  labs(title = "Teilnahmen pro Tutorium",
+       subtitle = "Alle Semester",
+       x = "TeilnehmerInnen", y = "Häufigkeit")
+```
 
 ### Sums
 
