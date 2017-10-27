@@ -45,7 +45,7 @@ ggplot(data = participation, aes(x = Teilnehmerzahl)) +
 shap_p <- broom::tidy(shapiro.test(participation$Teilnehmerzahl))$p.value
 ```
 
-Wir erhalten eine **`r ifelse(totals$median < totals$mean, "linkssteile", "rechtssteile")`** Verteilung. Der Shapiro-Wilk-Test auf Normalverteilung ergab ein **`r ifelse(shap_p < .10, "signifikantes", "nicht signifikantes")`** Ergebnis `r ifelse(shap_p < .10, paste0("**(p ", pval_string(shap_p), ")**"), NULL)` (was allein aufgrund von N = **`r totals$n`** nicht überraschend ist).
+Wir erhalten eine **`r ifelse(totals$median < totals$mean, "linkssteile", "rechtssteile")`** Verteilung. Der Shapiro-Wilk-Test auf Normalverteilung ergab ein **`r ifelse(shap_p < .10, "signifikantes", "nicht signifikantes")`** Ergebnis `r ifelse(shap_p < .10, paste0("**(p ", pval_string(shap_p), ")**"), "")` (was allein aufgrund von N = **`r totals$n`** nicht überraschend ist).
 
 Hier eine Übersicht der einzelnen Tutorien:
 
