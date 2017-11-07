@@ -47,7 +47,7 @@ ggplot(data = participation,
        aes(x = forcats::fct_reorder(TutorIn, Teilnehmerzahl, fun = mean), 
            y = Teilnehmerzahl,
            color = TutorIn)) +
-  stat_summary(fun.data = mean_cl_normal, geom = "errorbar", size = 2) +
+  geom_boxplot(alpha = .75) +
   stat_summary(fun.y = mean, geom = "point", size = 2.5, color = "black") +
   stat_summary(fun.y = mean, geom = "point", size = 1.5) +
   geom_hline(yintercept = mean(participation$Teilnehmerzahl, na.rm = T),
@@ -55,7 +55,7 @@ ggplot(data = participation,
   scale_color_brewer(palette = "Paired", guide = F) +
   coord_flip() +
   labs(title = "Durchnittliche Teilnehmerzahl pro TutorIn",
-       subtitle = "Mittelwert + 95% CI",
+       subtitle = "Boxplot + Mittelwert",
        x = "TutorIn", y = "Teilnehmerzahl",
        caption = "Daten aus allen Semestern")
 ```
@@ -102,19 +102,6 @@ participation %>%
 ### Means
 
 ```{r all_semesters_mean}
-participation %>%
-  ggplot(aes(x = Aufgabenblatt, y = Teilnehmerzahl,
-             color = Studienjahr)) +
-  stat_summary(fun.data = mean_cl_normal, geom = "errorbar", size = 1.5) +
-  stat_summary(fun.y = mean, geom = "point", size = 2.5, color = "black") +
-  stat_summary(fun.y = mean, geom = "point", size = 1.5) +
-  facet_grid(Studienjahr ~ Semester, labeller = label_both) +
-  scale_x_continuous(breaks = seq(0, 100, 3), minor_breaks = seq(0, 100, 1)) +
-  scale_color_brewer(palette = "Set1", guide = F) +
-  labs(title = "QM Tutorienteilnehmerschaft",
-       subtitle = "Durchschnittliche Teilnahme pro Woche + 95% CI",
-       y = "Mittlere Teilnehmerzahl + 95% CI")
-
 participation %>%
   ggplot(aes(x = Aufgabenblatt, y = Teilnehmerzahl,
              color = Studienjahr, fill = Studienjahr)) +
