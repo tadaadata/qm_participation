@@ -7,9 +7,10 @@ out_docs   <- list.files(path = ".", pattern = "*.html", full.names = T)
 out_assets <- c("assets", "site_libs")
 
 # Copy files to btsync directory
-if (system(command = "whoami", intern = T) == "Lukas") {
+cur_user <- system(command = "whoami", intern = T)
+if (cur_user == "Lukas") {
   out_dir <- "~/Sync/public.tadaa-data.de/qm_participation"
-} else {
+} else if (cur_user == "tobi") {
   out_dir <- "~/Dokumente/syncthing/public.tadaa-data.de/qm_participation/"
 }
 
