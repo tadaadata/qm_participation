@@ -84,13 +84,17 @@ mean_by_tutid <- participation %>% group_by(TutorIn, TutID) %>%
                     ungroup %>%
                     mutate(TutID = factor(TutID, levels = rev(levels(TutID))))
 
+# I don't even know what I'm doing here;
+# I'll leave it by this until I get my actual idea to work
 mean_by_tutid %>% 
-  ggplot(aes(x = TutID, color = TutorIn)) +
-  geom_errorbar(aes(y = mean, ymin = lower, ymax = upper), 
-                size = 3, width = .7, color = "black") +
-  geom_errorbar(aes(y = mean, ymin = lower, ymax = upper), 
-                size = 2, width = .6) +
-  geom_point(aes(y = mean), color = "black", size = 3) +
+  # filter(!is.na(upper)) %>% 
+  ggplot(aes(x = TutID, color = TutorIn, y = mean)) +
+  geom_errorbar(aes(ymin = lower, ymax = upper), 
+                size = 2, width = .5, color = "black") +
+  geom_point(size = 2.5, shape = 23, stroke = 1.5, color = "black") +
+  geom_errorbar(aes(ymin = lower, ymax = upper), 
+                size = 1, width = .4) +
+  geom_point(size = 1.5, shape = 23, stroke = 1, fill = "white") +
   geom_hline(aes(yintercept = mean(mean)), linetype = "dotted") +
   scale_y_continuous(breaks = seq(0, 100, 5),
                      minor_breaks = seq(0, 100, 1)) +
@@ -158,8 +162,8 @@ mean_by_day <- participation %>% group_by(Tag) %>%
 
 mean_by_day %>%
   ggplot(aes(x = Tag)) +
-  geom_errorbar(aes(y = mean, ymin = lower, ymax = upper), size = 2, width = .5) +
-  geom_point(aes(y = mean), color = "red", size = 3) +
+  geom_errorbar(aes(y = mean, ymin = lower, ymax = upper), size = 1, width = .6) +
+  geom_point(aes(y = mean), color = "white", fill = "red", shape = 23, size = 2.5, stroke = 1) +
   geom_hline(aes(yintercept = mean(mean)), linetype = "dotted") +
   scale_y_continuous(breaks = seq(0, 100, 5),
                      minor_breaks = seq(0, 100, 1)) +
@@ -272,8 +276,8 @@ participation %>% group_by(Aufgabenblatt) %>%
   mutate(Aufgabenblatt = factor(Aufgabenblatt)) %>%
   ungroup %>%
   ggplot(aes(x = Aufgabenblatt)) +
-  geom_errorbar(aes(y = mean, ymin = lower, ymax = upper), size = 1) +
-  geom_point(aes(y = mean), color = "red", size = 3) +
+  geom_errorbar(aes(y = mean, ymin = lower, ymax = upper), size = .8, width = .7) +
+  geom_point(aes(y = mean), color = "white", fill = "red", shape = 23, size = 2.5, stroke = 1) +
   geom_hline(aes(yintercept = mean(mean)), linetype = "dotted") +
   scale_y_continuous(breaks = seq(0, 100, 5),
                      minor_breaks = seq(0, 100, 1)) +
@@ -357,14 +361,21 @@ ggplot(data = tmp2, aes(x = Aufgabenblatt, y = Teilnehmer)) +
 ## Verlauf per Tutorium
 
 ```{r verlauf_pertut}
+# experiemnt: from (stacked) bar charts to dots & lines
+# also: I always seem to forget what to do about 
+# "geom_path: Each group consists of only one observation. Do you need to adjust the group aesthetic?"
+# Plot seems fine, though
 participation %>% 
   mutate(Uhrzeit = factor(Uhrzeit, levels = rev(levels(Uhrzeit)), ordered = TRUE)) %>%
-  ggplot(aes(x = Aufgabenblatt, y = Teilnehmerzahl, fill = TutorIn)) +
-  geom_bar(stat = "identity", color = "black") +
+  ggplot(aes(x = Aufgabenblatt, y = Teilnehmerzahl, fill = TutorIn, color = TutorIn, group = TutorIn)) +
+  # geom_bar(stat = "identity", color = "black") +
+  geom_line(size = .75) +
+  geom_point(size = 1.5, shape = 21, stroke = .75, color = "white") +
   scale_fill_brewer(palette = "Set1") +
+  scale_color_brewer(palette = "Set1") +
   facet_grid(Uhrzeit ~ Tag, switch = "y") +
   labs(title = "Teilnehmende pro Woche pro Tutorium", 
-       x = "Aufgabenblatt", fill = "", y = "") +
+       x = "Aufgabenblatt", fill = "", color = "", y = "") +
   theme_readthedown(axis_emph = "y") +
   theme(strip.text = element_text(size = rel(1)),
         strip.text.y = element_text(angle = 180))
@@ -376,7 +387,7 @@ participation %>%
 participation %>% group_by(Aufgabenblatt, TutorIn) %>%
   summarize(Teilnehmerzahl = sum(Teilnehmerzahl)) %>%
   ggplot(aes(x = Aufgabenblatt, weight = Teilnehmerzahl, fill = TutorIn)) +
-  geom_bar(color = "black") +
+  geom_bar(color = "white") +
   scale_y_continuous(breaks = seq(0, 100, 5),
                      minor_breaks = seq(0, 100, 1)) +
   scale_fill_brewer(palette = "Set1", guide = F) +
