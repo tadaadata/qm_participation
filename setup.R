@@ -19,8 +19,8 @@ cur_user <- as.list(Sys.info())$user
 
 if (cur_user == "Lukas") {
   participation <- readRDS("~/repos/tadaadata/qm-data/final-data/participation.rds")
-} else if (cur_user == "Tobi") {
-
+} else if (cur_user == "tobi") {
+  participation <- readRDS("~/Dokumente/tadaa-data/qm-data/final-data/participation.rds")
 } else {
   stop("Don't know where to get the data :(")
 }
