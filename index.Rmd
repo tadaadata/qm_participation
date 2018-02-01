@@ -89,11 +89,13 @@ participation %>%
   summarize(Teilnehmerzahl = sum(Teilnehmerzahl)) %>%
   ungroup() %>%
   ggplot(aes(x = Aufgabenblatt, y = Teilnehmerzahl,
-             color = Studienjahr)) +
-  geom_point(size = 4) +
+             color = Studienjahr, fill = Studienjahr)) +
+  geom_line() +
+  geom_point(size = 3, shape = 21, stroke = 1.5, color = "white") +
   facet_grid(Studienjahr ~ Semester, labeller = label_both) +
   scale_x_continuous(breaks = seq(0, 100, 3), minor_breaks = seq(0, 100, 1)) +
   scale_color_brewer(palette = "Set1", guide = F) +
+  scale_fill_brewer(palette = "Set1", guide = F) +
   labs(title = "QM Tutorienteilnehmerschaft",
        subtitle = "Gesamtteilnahme pro Woche",
        y = "Summe der Teilnehmerzahlen")
@@ -106,9 +108,9 @@ participation %>%
   ggplot(aes(x = Aufgabenblatt, y = Teilnehmerzahl,
              color = Studienjahr, fill = Studienjahr)) +
   stat_summary(fun.data = mean_cl_normal, geom = "ribbon", 
-               size = 1.5, alpha = .6) +
-  stat_summary(fun.y = mean, geom = "path", size = 2.5, color = "black") +
-  stat_summary(fun.y = mean, geom = "path", size = 1.5) +
+               size = .5, alpha = .6) +
+  stat_summary(fun.y = mean, geom = "path", size = 1.5, color = "black") +
+  stat_summary(fun.y = mean, geom = "path", size = .5) +
   facet_grid(Studienjahr ~ Semester, labeller = label_both) +
   scale_x_continuous(breaks = seq(0, 100, 3), minor_breaks = seq(0, 100, 1)) +
   scale_color_brewer(palette = "Set1", guide = F) +
@@ -123,9 +125,9 @@ participation %>%
 ```{r all_semester_weekdays}
 participation %>%
   ggplot(aes(x = forcats::fct_rev(Tag), y = Teilnehmerzahl)) +
-  stat_summary(fun.data = mean_cl_normal, geom = "errorbar", size = 1.5) +
-  stat_summary(fun.y = mean, geom = "point", size = 2.5, color = "black") +
-  stat_summary(fun.y = mean, geom = "point", size = 1.5) +
+  stat_summary(fun.data = mean_cl_normal, geom = "errorbar", size = 1) +
+  stat_summary(fun.y = mean, geom = "point", size = 2, color = "white", shape = 21, stroke = 1.5) +
+  stat_summary(fun.y = mean, geom = "point", size = 1.5) + # this doesn't do anything, does it?
   geom_hline(yintercept = mean(participation$Teilnehmerzahl, na.rm = T),
              linetype = "dashed") +
   coord_flip() +
@@ -137,13 +139,13 @@ participation %>%
 
 participation %>%
   ggplot(aes(x = forcats::fct_rev(Tag), y = Teilnehmerzahl,
-             color = Studienjahr)) +
-  stat_summary(fun.data = mean_cl_normal, geom = "errorbar", size = 1.5) +
-  stat_summary(fun.y = mean, geom = "point", size = 2.5, color = "black") +
-  stat_summary(fun.y = mean, geom = "point", size = 1.5) +
+             color = Studienjahr, fill = Studienjahr)) +
+  stat_summary(fun.data = mean_cl_normal, geom = "errorbar", size = .75) +
+  stat_summary(fun.y = mean, geom = "point", shape = 21, size = 1.75, stroke = 1, color = "white") +
   coord_flip() +
   facet_grid(Studienjahr ~ Semester, labeller = label_both) +
   scale_color_brewer(palette = "Set1", guide = F) +
+  scale_fill_brewer(palette = "Set1", guide = F) +
   labs(title = "QM Tutorienteilnehmerschaft",
        subtitle = "Durchschnittliche Teilnahme pro Wochentag + 95% CI",
        x = "Tag",
@@ -158,16 +160,19 @@ model <- aov(Teilnehmerzahl ~ Tag, data = participation)
 tadaa_aov(Teilnehmerzahl ~ Tag, data = participation, print = "markdown")
 
 TukeyHSD(model) %>%
-  broom::tidy() %>%
-  mutate(signif = if_else(adj.p.value < 0.05, "Signifikant", "Nicht Signifikant")) %>%
+  tidy() %>%
+  mutate(signif = if_else(adj.p.value < 0.05, "Signifikant", "Nicht Signifikant"),
+         comparison = stringr::str_replace(comparison, "-", " - ")) %>%
   ggplot(data = ., aes(x = reorder(comparison, estimate), 
                        y = estimate, 
                        ymin = conf.low, ymax = conf.high,
-                       color = signif)) +
-  geom_errorbar(width = .5, size = 1.5) +
+                       color = signif, fill = signif)) +
+  geom_errorbar(width = .5, size = .75) +
+  geom_point(shape = 21, size = 1.5, stroke = 1, color = "white") +
   geom_hline(yintercept = 0, linetype = "dashed", color = "black") +
   coord_flip() +
   scale_color_brewer(palette = "Set1", direction = -1) +
+  scale_fill_brewer(palette = "Set1", direction = -1, guide = F) +
   labs(title = "Tukey HSD Post Hoc Test",
        subtitle = "Estimates mit 95% CI",
        x = "Vergleich", y = "Estimate + 95% CI", color = "") +
