@@ -15,7 +15,7 @@ library(methods)
 library(hrbrthemes)
 
 # get data
-cur_user <- as.list(Sys.info())$user
+cur_user <- Sys.info()[["user"]]
 
 if (cur_user == "Lukas") {
   participation <- readRDS("~/repos/tadaadata/qm-data/final-data/participation.rds")
